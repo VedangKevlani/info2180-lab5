@@ -1,63 +1,55 @@
 <?php
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: text/html; charset=utf-8");  // Change content type to HTML for rendering table
-$host = 'localhost';
-$port = '3307';
-$username = 'lab5_user';
-$password = 'password123';
-$dbname = 'world';
+// Enable error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+header('Access-Control-Allow-Origin: *'); // Allow all origins
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS'); // Allowed HTTP methods
+header('Access-Control-Allow-Headers: Content-Type'); // Allowed headers
+
+$servername = "localhost";
+$username = "lab5_user";  // Change this to 'root' if using root
+$password = "password123";  // Empty string for 'root' user in XAMPP
+$dbname = "world";
 
 try {
-    // Establish PDO connection
-    $conn = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Establish the PDO connection
+    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
     
-    // Get the 'query' parameter from the request
-    $query = isset($_GET['query']) ? htmlspecialchars($_GET['query']) : '';  // Using 'query' as the key for better consistency
+    // Set the PDO error mode to exception
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Default SQL query if no country is provided
-    $sql = "SELECT name, continent, independence_year, head_of_state FROM countries";
+    // Get the country parameter from URL
+    $country = isset($_GET['country']) ? $_GET['country'] : '';
 
-    if ($query) {
-        $sql .= " WHERE name LIKE :country";
+    // Prepare SQL query using prepared statements (to prevent SQL injection)
+    if ($country) {
+        $sql = "SELECT name, continent, year_of_independence, head_of_state FROM countries WHERE name LIKE :country";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([':country' => '%' . $country . '%']); // Bind the country parameter
+
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($results) {
+            // Output the data in an HTML table
+            echo "<table border='1'>";
+            echo "<tr><th>Country</th><th>Continent</th><th>Year of Independence</th><th>Head of State</th></tr>";
+            foreach ($results as $row) {
+                echo "<tr><td>" . htmlspecialchars($row['name']) . "</td><td>" . htmlspecialchars($row['continent']) . "</td><td>" . htmlspecialchars($row['year_of_independence']) . "</td><td>" . htmlspecialchars($row['head_of_state']) . "</td></tr>";
+            }
+            echo "</table>";
+        } else {
+            echo "No results found for '$country'.";
+        }
+    } else {
+        echo "No country parameter provided.";
     }
-
-    $stmt = $conn->prepare($sql);
-
-    // If there is a search query, bind the parameter
-    if ($query) {
-        $countryParam = "%$query%";  // Add wildcards for partial match
-        $stmt->bindParam(':country', $countryParam);
-    }
-
-    $stmt->execute();
-
-    // Fetch the results
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    echo '<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">';
-    echo '<thead><tr>';
-    echo '<th>Country Name</th>';
-    echo '<th>Continent</th>';
-    echo '<th>Independence Year</th>';
-    echo '<th>Head of State</th>';
-    echo '</tr></thead>';
-    echo '<tbody>';
-
-    foreach ($results as $row) {
-        echo '<tr>';
-        echo '<td>' . htmlspecialchars($row['name']) . '</td>';
-        echo '<td>' . htmlspecialchars($row['continent']) . '</td>';
-        echo '<td>' . htmlspecialchars($row['independence_year']) . '</td>';
-        echo '<td>' . htmlspecialchars($row['head_of_state']) . '</td>';
-        echo '</tr>';
-    }
-
-    echo '</tbody>';
-    echo '</table>';
 
 } catch (PDOException $e) {
-    // If there's a connection error, return a message
-    echo '<p>Error: Connection failed: ' . htmlspecialchars($e->getMessage()) . '</p>';
+    // Handle connection errors
+    echo "Connection failed: " . $e->getMessage();
 }
+
+// Close the connection
+$conn = null;
 ?>

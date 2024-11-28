@@ -1,40 +1,47 @@
-$(document).ready(function () {
-    function sanitizeInput(input) {
-        const temp = document.createElement('div');
-        temp.textContent = input;
-        return temp.innerHTML;
+// Function to display the result
+function displayResult(data) {
+    const resultDiv = document.getElementById('result');
+    if (data.error) {
+        resultDiv.innerHTML = `<p>${data.error}</p>`;
+    } else if (Array.isArray(data)) {
+        // Build a table for the results
+        let table = '<table><thead><tr><th>Name</th><th>Continent</th><th>Independence</th><th>Head of State</th></tr></thead><tbody>';
+        data.forEach(row => {
+            table += `<tr>
+                        <td>${row.name}</td>
+                        <td>${row.continent}</td>
+                        <td>${row.independence_year}</td>
+                        <td>${row.head_of_state}</td>
+                      </tr>`;
+        });
+        table += '</tbody></table>';
+        resultDiv.innerHTML = table;
+    } else {
+        resultDiv.innerHTML = '<p>No results found.</p>';
     }
+}
 
-    $('#lookup-country').on('click', function() {
-        const lookupButton = sanitizeInput($('#country').val().trim());
-        const resultContainer = $('#result');
+$(document).ready(function() {
+    $('#lookup-country').click(function() {
+        var country = $('#country').val().trim();
 
-        // Clear previous results
-        resultContainer.html('<hr>');
-
-        // If no country is entered, display a message
-        if (!lookupButton) {
-            resultContainer.append('<p>No country entered</p>');
-            return;
+        if (country !== '') {
+            $.ajax({
+                url: 'world.php',  // Adjust to your PHP file path
+                type: 'GET',
+                data: { country: country, lookup: 'country' },
+                success: function(response) {
+                    // Display the response (table data)
+                    $('#result').html(response);
+                },
+                error: function(xhr, status, error) {
+                    console.log('AJAX error: ' + status + ' ' + error);
+                }
+            });
+        } else {
+            $('#result').html('<p>Please enter a country.</p>');
         }
-
-        let url = 'http://localhost/info2180-lab5/world.php';
-        console.log(lookupButton);
-
-        $.ajax({
-            url: url,
-            type: 'GET',
-            data: { query: lookupButton },  // Send the sanitized input as the query
-            dataType: 'html',               // Expect HTML response from PHP
-            success: function(data) {
-                console.log(data);        
-                resultContainer.html(data); // Insert the HTML table returned by PHP
-            },
-            error: function(xhr, status, error) {
-                console.error('XHR Status: ', status);
-                console.error('XHR Response Text: ', xhr.responseText);
-                resultContainer.html('<p>Error: ' + error + '</p>');
-            }
-        });        
     });
 });
+
+
