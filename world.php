@@ -9,12 +9,13 @@ header('Access-Control-Allow-Headers: Content-Type'); // Allowed headers
 
 $servername = "localhost";
 $username = "lab5_user";  // Change this to 'root' if using root
+$port = '3307';
 $password = "password123";  // Empty string for 'root' user in XAMPP
 $dbname = "world";
 
 try {
     // Establish the PDO connection
-    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+    $conn = new PDO("mysql:host=$servername;port=$port;dbname=$dbname", $username, $password);
     
     // Set the PDO error mode to exception
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -24,7 +25,7 @@ try {
 
     // Prepare SQL query using prepared statements (to prevent SQL injection)
     if ($country) {
-        $sql = "SELECT name, continent, year_of_independence, head_of_state FROM countries WHERE name LIKE :country";
+        $sql = "SELECT name, continent, independence_year, head_of_state FROM countries WHERE name LIKE :country";
         $stmt = $conn->prepare($sql);
         $stmt->execute([':country' => '%' . $country . '%']); // Bind the country parameter
 
@@ -35,8 +36,11 @@ try {
             echo "<table border='1'>";
             echo "<tr><th>Country</th><th>Continent</th><th>Year of Independence</th><th>Head of State</th></tr>";
             foreach ($results as $row) {
-                echo "<tr><td>" . htmlspecialchars($row['name']) . "</td><td>" . htmlspecialchars($row['continent']) . "</td><td>" . htmlspecialchars($row['year_of_independence']) . "</td><td>" . htmlspecialchars($row['head_of_state']) . "</td></tr>";
-            }
+                echo "<tr><td>" . htmlspecialchars($row['name'] ?? 'N/A') . "</td>
+                <td>" . htmlspecialchars($row['continent'] ?? 'N/A') . "</td>
+                <td>" . htmlspecialchars($row['independence_year'] ?? 'N/A') . "</td>
+                <td>" . htmlspecialchars($row['head_of_state'] ?? 'N/A') . "</td></tr>";
+                  }
             echo "</table>";
         } else {
             echo "No results found for '$country'.";
