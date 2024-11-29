@@ -90,3 +90,23 @@ button:hover {
 #lookup-country:hover {
     background-color: rgb(68, 68, 68);
 }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: left;
+}
+
+table td {
+    white-space: nowrap; /* Prevents text from wrapping */
+}
+
+table th:nth-child(4), table td:nth-child(4) {
+    width: 200px; /* Set a width for the Head of State column if needed */
+}
+

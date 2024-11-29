@@ -39,7 +39,30 @@ $(document).ready(function() {
                 }
             });
         } else {
-            $('#result').html('<p>Please enter a country.</p>');
+            $('#result').html('<p>Please enter a country or city.</p>');
+        }
+    });
+});
+
+$(document).ready(function() {
+    $('#lookup-cities').click(function() {
+        var country = $('#country').val().trim();
+
+        if (country !== '') {
+            $.ajax({
+                url: 'world.php',  // Adjust to your PHP file path
+                type: 'GET',
+                data: { country: country, lookup: 'city' },
+                success: function(response) {
+                    console.log('Response from PHP:', response); // Log the raw HTML response
+                    $('#result').html(response); // Insert the response into the result div
+                },                
+                error: function(xhr, status, error) {
+                    console.log('AJAX error: ' + status + ' ' + error);
+                }
+            });
+        } else {
+            $('#result').html('<p>Please enter a country or city.</p>');
         }
     });
 });
